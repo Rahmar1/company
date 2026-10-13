@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>حاسبة الكميات وبنود المقايسة - Bill of Quantities</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Cairo -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        roseBrand: {
+                            50: '#fff1f2',
+                            100: '#ffe4e6',
+                            400: '#fb7185',
+                            500: '#f43f5e',
+                            600: '#e11d48',
+                        },
+                        skyBrand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                        }
+                    },
+                    fontFamily: {
+                        cairo: ['Cairo', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #f8fafc;
+        }
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            .print-only {
+                display: block !important;
+                margin: none;
+                size:100%;
+            }
+            body {
+                background-color: white;
+            }
+            .shadow-card {
+                box-shadow: none !important;
+                border: 1px solid #e2e8f0;
+            }
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="text-slate-800 min-h-screen flex flex-col">
+
+    <!-- Header Navbar -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm no-print">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap justify-between items-center gap-4">
+            <div class="flex items-center space-x-3 space-x-reverse">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-skyBrand-500 to-roseBrand-400 flex items-center justify-center text-white shadow-md">
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold text-slate-800 leading-tight">مقايسات شركه خالد نصار</h1>
+                 
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-2 space-x-reverse">
+                <button onclick="resetData()" class="px-3 py-2 text-sm rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-rotate-right text-xs"></i>
+                    <span>إعادة ضبط</span>
+                </button>
+                <button onclick="window.print()" class="px-4 py-2 text-sm rounded-lg bg-skyBrand-500 hover:bg-skyBrand-600 text-white font-medium shadow-sm transition flex items-center gap-2">
+                    <i class="fa-solid fa-print"></i>
+                    <span>طباعة / حفظ PDF</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+        <!-- Summary Dashboard Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 no-print">
+            <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-slate-500 font-medium">إجمالي المقايسة</p>
+                    <p id="stat-total-cost" class="text-xl font-extrabold text-slate-800 mt-1">0.00 ج.م</p>
+                </div>
+                <div class="w-11 h-11 rounded-xl bg-skyBrand-50 text-skyBrand-600 flex items-center justify-center text-lg">
+                    <i class="fa-solid fa-coins"></i>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-slate-500 font-medium">إجمالي المساحة السطحية</p>
+                    <p id="stat-floor-area" class="text-xl font-extrabold text-slate-800 mt-1">0.00 م²</p>
+                </div>
+                <div class="w-11 h-11 rounded-xl bg-roseBrand-50 text-roseBrand-500 flex items-center justify-center text-lg">
+                    <i class="fa-solid fa-vector-square"></i>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-slate-500 font-medium">مساحة الحوائط الصافية</p>
+                    <p id="stat-walls-area" class="text-xl font-extrabold text-slate-800 mt-1">0.00 م²</p>
+                </div>
+                <div class="w-11 h-11 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg">
+                    <i class="fa-solid fa-border-all"></i>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-slate-500 font-medium">عدد البنود النشطة</p>
+                    <p id="stat-items-count" class="text-xl font-extrabold text-slate-800 mt-1">0 بند</p>
+                </div>
+                <div class="w-11 h-11 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg">
+                    <i class="fa-solid fa-list-check"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Project Data & Main Dimensions Input -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden no-print">
+            <div class="bg-gradient-to-r from-slate-50 via-skyBrand-50/30 to-roseBrand-50/30 p-4 border-b border-slate-200 flex justify-between items-center cursor-pointer" onclick="toggleSection('dimensions-section')">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-ruler-combined text-skyBrand-500"></i>
+                    <h2 class="font-bold text-slate-700">بيانات الأبعاد والمساحات الأساسية</h2>
+                </div>
+                <span id="dimensions-toggle-icon" class="text-slate-400 text-sm"><i class="fa-solid fa-chevron-up"></i></span>
+            </div>
+
+            <div id="dimensions-section" class="p-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- Project Name -->
+                <div class="col-span-1 md:col-span-2 lg:col-span-4 pb-2 border-b border-slate-100 mb-2">
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">اسم المشروع / العميل</label>
+                    <input type="text" id="project-name" value="مقايسة تشطيب شقة سكنية" class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-skyBrand-500 text-sm font-medium">
+                </div>
+
+                <!-- Floor Area -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">مساحة الأرضية الإجمالية (م²)</label>
+                    <div class="relative">
+                        <input type="number" id="dim-floor-area" value="100" min="0" step="0.1" oninput="recalculateAll()" class="w-full px-3 py-2 pl-8 rounded-xl border border-slate-200 focus:outline-none focus:border-skyBrand-500 text-sm font-semibold text-slate-800">
+                        <span class="absolute left-3 top-2.5 text-xs text-slate-400 font-bold">م²</span>
+                    </div>
+                </div>
+
+                <!-- Wall Perimeter -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">محيط الحوائط الإجمالي (متر طولي)</label>
+                    <div class="relative">
+                        <input type="number" id="dim-wall-perimeter" value="40" min="0" step="0.1" oninput="recalculateAll()" class="w-full px-3 py-2 pl-8 rounded-xl border border-slate-200 focus:outline-none focus:border-skyBrand-500 text-sm font-semibold text-slate-800">
+                        <span class="absolute left-3 top-2.5 text-xs text-slate-400 font-bold">م.ط</span>
+                    </div>
+                </div>
+
+                <!-- Ceiling Height -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">ارتفاع السقف (متر)</label>
+                    <div class="relative">
+                        <input type="number" id="dim-height" value="3" min="0" step="0.05" oninput="recalculateAll()" class="w-full px-3 py-2 pl-8 rounded-xl border border-slate-200 focus:outline-none focus:border-skyBrand-500 text-sm font-semibold text-slate-800">
+                        <span class="absolute left-3 top-2.5 text-xs text-slate-400 font-bold">م</span>
+                    </div>
+                </div>
+
+                <!-- Openings Area (Doors / Windows) -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">خصم فتحات الأبواب والشبابيك (م²)</label>
+                    <div class="relative">
+                        <input type="number" id="dim-openings" value="15" min="0" step="0.1" oninput="recalculateAll()" class="w-full px-3 py-2 pl-8 rounded-xl border border-slate-200 focus:outline-none focus:border-roseBrand-400 text-sm font-semibold text-slate-800">
+                        <span class="absolute left-3 top-2.5 text-xs text-slate-400 font-bold">م²</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- BOQ Table Card -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+            <!-- Table Header Bar -->
+            <div class="p-4 border-b border-slate-200 flex flex-wrap justify-between items-center gap-3 bg-slate-50/80">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-list-ol text-roseBrand-500"></i>
+                    <h2 class="font-bold text-slate-700">بنود المقايسة والكميات</h2>
+                </div>
+
+                <div class="flex items-center gap-2 no-print">
+                    <button onclick="addNewCustomItem()" class="px-3 py-1.5 text-xs rounded-xl bg-roseBrand-500 hover:bg-roseBrand-600 text-white font-semibold transition flex items-center gap-1 shadow-sm">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>إضافة بند مخصص</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Print Header Banner -->
+            <div class="hidden print-only p-6 border-b border-slate-200 m-0 w-full">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h1 class="text-2xl font-bold text-slate-800" id="print-project-title">جدول مقايسة التكاليف والكميات</h1>
+                        <p class="text-sm text-slate-500 mt-1">تاريخ الإصدار: <span id="print-date"></span></p>
+                    </div>
+                    <div class="text-left">
+                        <span class="text-xs bg-slate-100 text-slate-700 font-bold px-3 py-1 rounded-full border border-slate-300">مقايسة معتمدة</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table Container -->
+            <div class="overflow-x-auto ">
+                <table class="w-full text-right table-fixed border-collapse">
+                    <thead>
+                        <tr class="bg-slate-100/70 text-slate-600 text-xs font-bold border-b border-slate-200">
+                            <th class="p-3 text-center w-12">#</th>
+                            <th class="p-3 min-w-[180px]">اسم البند / الفئة</th>
+                            <th class="p-3 text-center min-w-[80px]">الوحدة</th>
+                            <th class="p-3 min-w-[200px]">طريقة حساب الكمية</th>
+                            <th class="p-3 text-center min-w-[110px]">الكمية المحسوبة</th>
+                            <th class="p-3 text-center min-w-[120px]">سعر الوحدة (ج.م)</th>
+                            <th class="p-3 text-center min-w-[130px]">الإجمالي (ج.م)</th>
+                            <th class="p-3 text-center w-16 no-print">إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="boq-tbody" class="divide-y divide-slate-100 text-sm">
+                        <!-- Rows dynamically populated by JS -->
+                    </tbody>
+                    <tfoot>
+                        <tr class="bg-slate-50 font-bold border-t-2 border-slate-200 text-slate-800">
+                            <td colspan="6" class="p-4 text-left font-extrabold text-base">إجمالي المقايسة النهائي:</td>
+                            <td id="table-grand-total" class="p-4 text-center text-lg text-skyBrand-600 font-black">0.00 ج.م</td>
+                            <td class="no-print"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+        <!-- Notes Section -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm space-y-3">
+            <h3 class="font-bold text-slate-700 text-sm flex items-center gap-2">
+                <i class="fa-solid fa-note-sticky text-amber-500"></i>
+                <span>ملاحظات وإرشادات التنفيذ</span>
+            </h3>
+            <textarea id="boq-notes" rows="3" class="w-full p-3 text-xs rounded-xl border border-slate-200 focus:outline-none focus:border-skyBrand-500 text-slate-600" placeholder="أدخل أي ملاحظات خاصة بالمشروع أو الشروط الفنية هنا..."></textarea>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-4 mt-auto no-print">
+        <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-400">
+            تم التطوير بواسطة حاسبة بنود المقايسات الهندسية &copy; 2026
+        </div>
+    </footer>
+
+    <script>
+        // Default Items Array with standard calculation rules
+        let items = [
+            {
+                id: 1,
+                name: "أعمال خرسانة المسلحة للأسقف",
+                unit: "م³",
+                type: "floor_volume", // Floor Area * 0.15m (thickness)
+                factor: 0.15,
+                unitPrice: 4500,
+                calculatedQty: 0,
+                total: 0
+            },
+            {
+                id: 2,
+                name: "أعمال المباني (بلوك/طوب)",
+                unit: "م²",
+                type: "walls_area", // Wall Area
+                factor: 1,
+                unitPrice: 180,
+                calculatedQty: 0,
+                total: 0
+            },
+            {
+                id: 3,
+                name: "أعمال المحارة الداخلية (البياض)",
+                unit: "م²",
+                type: "plaster_area", // Walls Area + Floor Area (Ceiling)
+                factor: 1,
+                unitPrice: 90,
+                calculatedQty: 0,
+                total: 0
+            },
+            {
+                id: 4,
+                name: "أعمال الدهانات والطلاء (3 وش)",
+                unit: "م²",
+                type: "plaster_area", // Same as Plaster Area
+                factor: 1,
+                unitPrice: 85,
+                calculatedQty: 0,
+                total: 0
+            },
+            {
+                id: 5,
+                name: "أعمال سيراميك الأرضيات",
+                unit: "م²",
+                type: "floor_area", // Floor Area * 1.05 (Hald)
+                factor: 1.05,
+                unitPrice: 220,
+                calculatedQty: 0,
+                total: 0
+            },
+            {
+                id: 6,
+                name: "أعمال سيراميك الحوائط (الحمامات والمطابخ)",
+                unit: "م²",
+                type: "manual",
+                factor: 1,
+                manualQty: 45,
+                unitPrice: 240,
+                calculatedQty: 0,
+                total: 0
+            },
+            {
+                id: 7,
+                name: "أعمال الجبس بورد (أسقف معلقة)",
+                unit: "م²",
+                type: "floor_area",
+                factor: 0.8,
+                unitPrice: 280,
+                calculatedQty: 0,
+                total: 0
+            },
+            {
+                id: 8,
+                name: "أعمال التأسيس الكهربائي",
+                unit: "مقطوعية",
+                type: "fixed",
+                factor: 1,
+                manualQty: 1,
+                unitPrice: 15000,
+                calculatedQty: 1,
+                total: 15000
+            }
+        ];
+
+        function toggleSection(sectionId) {
+            const el = document.getElementById(sectionId);
+            const icon = document.getElementById(sectionId + '-toggle-icon');
+            if (el.classList.contains('hidden')) {
+                el.classList.remove('hidden');
+                if(icon) icon.innerHTML = '<i class="fa-solid fa-chevron-up"></i>';
+            } else {
+                el.classList.add('hidden');
+                if(icon) icon.innerHTML = '<i class="fa-solid fa-chevron-down"></i>';
+            }
+        }
+
+        // Calculation Core Engine
+        function recalculateAll() {
+            // Fetch Primary Dimensions
+            const floorArea = parseFloat(document.getElementById('dim-floor-area').value) || 0;
+            const wallPerimeter = parseFloat(document.getElementById('dim-wall-perimeter').value) || 0;
+            const height = parseFloat(document.getElementById('dim-height').value) || 0;
+            const openings = parseFloat(document.getElementById('dim-openings').value) || 0;
+
+            // Derived Areas
+            const grossWallArea = wallPerimeter * height;
+            const netWallArea = Math.max(0, grossWallArea - openings);
+            const totalPlasterArea = netWallArea + floorArea; // Walls + Ceiling
+
+            // Update Summary Stats
+            document.getElementById('stat-floor-area').innerText = floorArea.toFixed(2) + ' م²';
+            document.getElementById('stat-walls-area').innerText = netWallArea.toFixed(2) + ' م²';
+
+            let grandTotal = 0;
+
+            // Compute Each Item Quantities
+            items.forEach(item => {
+                let qty = 0;
+
+                switch(item.type) {
+                    case 'floor_area':
+                        qty = floorArea * item.factor;
+                        break;
+                    case 'floor_volume':
+                        qty = floorArea * item.factor;
+                        break;
+                    case 'walls_area':
+                        qty = netWallArea * item.factor;
+                        break;
+                    case 'plaster_area':
+                        qty = totalPlasterArea * item.factor;
+                        break;
+                    case 'manual':
+                        qty = (parseFloat(item.manualQty) || 0) * item.factor;
+                        break;
+                    case 'fixed':
+                        qty = 1;
+                        break;
+                    default:
+                        qty = (parseFloat(item.manualQty) || 0);
+                }
+
+                item.calculatedQty = Math.max(0, qty);
+                item.total = item.calculatedQty * (parseFloat(item.unitPrice) || 0);
+                grandTotal += item.total;
+            });
+
+            // Update UI Stats & Table
+            document.getElementById('stat-total-cost').innerText = grandTotal.toLocaleString('ar-EG', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' ج.م';
+            document.getElementById('table-grand-total').innerText = grandTotal.toLocaleString('ar-EG', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' ج.م';
+            document.getElementById('stat-items-count').innerText = items.length + ' بنود';
+
+            renderTable();
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('boq-tbody');
+            tbody.innerHTML = '';
+
+            items.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50/80 transition border-b border-slate-100";
+
+                tr.innerHTML = `
+                    <td class="p-3 text-center font-bold text-slate-400 text-xs">${index + 1}</td>
+                    <td class="p-3">
+                        <input type="text" value="${item.name}" onchange="updateItemProp(${item.id}, 'name', this.value)" 
+                            class="w-full bg-transparent font-semibold text-slate-800 border-b border-transparent hover:border-slate-300 focus:border-skyBrand-500 focus:bg-white focus:outline-none rounded px-1 py-0.5 text-sm">
+                    </td>
+                    <td class="p-3 text-center">
+                        <select onchange="updateItemProp(${item.id}, 'unit', this.value)" class="bg-transparent border border-slate-200 rounded px-1.5 py-1 text-xs focus:outline-none">
+                            <option value="م²" ${item.unit === 'م²' ? 'selected' : ''}>م²</option>
+                            <option value="م³" ${item.unit === 'م³' ? 'selected' : ''}>م³</option>
+                            <option value="م.ط" ${item.unit === 'م.ط' ? 'selected' : ''}>م.ط</option>
+                            <option value="عدد" ${item.unit === 'عدد' ? 'selected' : ''}>عدد</option>
+                            <option value="مقطوعية" ${item.unit === 'مقطوعية' ? 'selected' : ''}>مقطوعية</option>
+                        </select>
+                    </td>
+                    <td class="p-3">
+                        <div class="flex items-center gap-1.5">
+                            <select onchange="updateItemType(${item.id}, this.value)" class="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-1.5 focus:outline-none">
+                                <option value="floor_area" ${item.type === 'floor_area' ? 'selected' : ''}>تلقائي: مساحة الأرضية</option>
+                                <option value="floor_volume" ${item.type === 'floor_volume' ? 'selected' : ''}>تلقائي: حجم (المساحة × سمك)</option>
+                                <option value="walls_area" ${item.type === 'walls_area' ? 'selected' : ''}>تلقائي: مساحة الحوائط الصافية</option>
+                                <option value="plaster_area" ${item.type === 'plaster_area' ? 'selected' : ''}>تلقائي: محارة (حوائط + سقف)</option>
+                                <option value="manual" ${item.type === 'manual' ? 'selected' : ''}>يدوي: كمية ثابتة / مخصصة</option>
+                                <option value="fixed" ${item.type === 'fixed' ? 'selected' : ''}>ثابت: كمية = 1</option>
+                            </select>
+                            ${item.type === 'manual' ? `
+                                <input type="number" value="${item.manualQty || 0}" min="0" placeholder="الكمية" oninput="updateItemProp(${item.id}, 'manualQty', this.value)"
+                                    class="w-20 px-2 py-1 text-xs border border-amber-300 rounded-lg focus:outline-none bg-amber-50">
+                            ` : ''}
+                        </div>
+                    </td>
+                    <td class="p-3 text-center font-bold text-slate-700 bg-slate-50/50">
+                        ${item.calculatedQty.toFixed(2)} ${item.unit}
+                    </td>
+                    <td class="p-3 text-center">
+                        <input type="number" value="${item.unitPrice}" min="0" oninput="updateItemProp(${item.id}, 'unitPrice', this.value)" 
+                            class="w-24 text-center bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs font-semibold focus:outline-none focus:border-skyBrand-500">
+                    </td>
+                    <td class="p-3 text-center font-extrabold text-slate-800">
+                        ${item.total.toLocaleString('ar-EG', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                    </td>
+                    <td class="p-3 text-center no-print">
+                        <button onclick="removeItem(${item.id})" class="text-roseBrand-500 hover:text-roseBrand-600 hover:bg-roseBrand-50 p-1.5 rounded-lg transition">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function updateItemProp(id, prop, value) {
+            const item = items.find(i => i.id === id);
+            if (item) {
+                item[prop] = prop === 'name' || prop === 'unit' ? value : parseFloat(value) || 0;
+                recalculateAll();
+            }
+        }
+
+        function updateItemType(id, type) {
+            const item = items.find(i => i.id === id);
+            if (item) {
+                item.type = type;
+                if (type === 'manual' && (!item.manualQty || item.manualQty === 0)) {
+                    item.manualQty = 10;
+                }
+                recalculateAll();
+            }
+        }
+
+        function addNewCustomItem() {
+            const newId = items.length ? Math.max(...items.map(i => i.id)) + 1 : 1;
+            items.push({
+                id: newId,
+                name: "بند مخصص جديد",
+                unit: "م²",
+                type: "manual",
+                manualQty: 10,
+                factor: 1,
+                unitPrice: 100,
+                calculatedQty: 10,
+                total: 1000
+            });
+            recalculateAll();
+
+            // التمرير التلقائي السلس إلى البند الجديد والتركيز عليه
+            setTimeout(() => {
+                const tbody = document.getElementById('boq-tbody');
+                const lastRow = tbody.lastElementChild;
+                if (lastRow) {
+                    lastRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    const inputName = lastRow.querySelector('input[type="text"]');
+                    if (inputName) {
+                        inputName.focus();
+                        inputName.select();
+                    }
+                }
+            }, 100);
+        }
+
+        function removeItem(id) {
+            items = items.filter(i => i.id !== id);
+            recalculateAll();
+        }
+
+        function resetData() {
+            if (confirm("هل أنت تأكد من إعادة ضبط كافة البيانات والمساحات للقيم الافتراضية؟")) {
+                document.getElementById('project-name').value = "مقايسة تشطيب شقة سكنية";
+                document.getElementById('dim-floor-area').value = 100;
+                document.getElementById('dim-wall-perimeter').value = 40;
+                document.getElementById('dim-height').value = 3;
+                document.getElementById('dim-openings').value = 15;
+                
+                // Re-initialize default items
+                location.reload();
+            }
+        }
+
+        // Print Preparation Listener
+        window.onbeforeprint = function() {
+            document.getElementById('print-project-title').innerText = document.getElementById('project-name').value || "مقايسة التكاليف والكميات";
+            document.getElementById('print-date').innerText = new Date().toLocaleDateString('ar-EG');
+        };
+
+        // Initial Calculation Run on Page Load
+        window.onload = function() {
+            recalculateAll();
+        };
+    </script>
+</body>
+</html>
